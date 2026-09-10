@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MO OS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #1c1c1e;
+      --bg-light: #2c2c2e;
+      --bg-lighter: #3a3a3c;
+      --text: #f0ebe3;
+      --text-dim: rgba(240,235,227,0.45);
+      --text-mid: rgba(240,235,227,0.65);
+      --accent: #cc8844;
+      --accent-dim: rgba(204,136,68,0.15);
+      --accent-border: rgba(204,136,68,0.3);
+      --border: rgba(240,235,227,0.08);
+      --border-hover: rgba(204,136,68,0.3);
+      --win-bg: #1c1c1e;
+      --win-titlebar: #252528;
+    }
+
+    body {
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      background: #0e0e0e;
+      font-family: 'JetBrains Mono', monospace;
+      user-select: none;
+      cursor: default;
+    }
+
+    input, textarea, [contenteditable] {
+      user-select: text !important;
+      cursor: text;
+    }
+
+    /* ══════════════════════════════════════
+       WALLPAPERS
+       ══════════════════════════════════════ */
+    .wallpaper {
+      position: absolute; inset: 0; z-index: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    #wp-mo-grid { background: #1a1d23; }
+    #wp-mo-grid::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(204,136,68,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(204,136,68,0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    #wp-mo-grid::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 40%, rgba(204,136,68,0.1) 0%, transparent 55%);
+    }
+
+    #wp-ocean { background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 40%, #0d1b2a 100%); }
+    #wp-ocean::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(56,130,180,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(56,130,180,0.08) 0%, transparent 40%);
+    }
+
+    #wp-dusk { background: linear-gradient(160deg, #1a1020 0%, #2d1f3d 40%, #1a1020 100%); }
+    #wp-dusk::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 60% 30%, rgba(140,80,180,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 30% 70%, rgba(204,136,68,0.08) 0%, transparent 40%);
+    }
+
+    #wp-ember { background: linear-gradient(160deg, #1a1410 0%, #2a1c14 40%, #1a1410 100%); }
+    #wp-ember::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 50%, rgba(204,100,40,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(204,136,68,0.06) 0%, transparent 40%);
+    }
+
+    #wp-slate { background: #1e2024; }
+    #wp-slate::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(240,235,227,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240,235,227,0.03) 1px, transparent 1px);
+      background-size: 120px 120px;
+    }
+    #wp-slate::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    /* ══════════════════════════════════════
+       BOOT SCREEN
+       ══════════════════════════════════════ */
+    #boot-screen {
+      position: fixed; inset: 0;
+      background: #0e0e0e;
+      z-index: 100000;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      transition: opacity 0.8s ease;
+    }
+    #boot-screen.fade-out { opacity: 0; pointer-events: none; }
+    #boot-logo {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700; font-size: 40px;
+      color: var(--text); letter-spacing: 14px;
+      margin-bottom: 48px; opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    #boot-logo.visible { opacity: 1; transform: translateY(0); }
+    #boot-log { width: 340px; font-size: 11px; color: rgba(240,235,227,0.3); letter-spacing: 1.5px; line-height: 2; }
+    #boot-log .line { opacity: 0; transform: translateY(4px); transition: opacity 0.3s, transform 0.3s; }
+    #boot-log .line.visible { opacity: 1; transform: translateY(0); }
+    #boot-log .line.done { color: var(--accent); }
+    #boot-version { position: absolute; bottom: 48px; font-size: 10px; color: rgba(240,235,227,0.18); letter-spacing: 3px; opacity: 0; transition: opacity 0.5s; }
+    #boot-version.visible { opacity: 1; }
+
+    /* ══════════════════════════════════════
+       DESKTOP
+       ══════════════════════════════════════ */
+    #desktop {
+      width: 100vw; height: 100vh;
+      background: var(--bg);
+      position: relative;
+      opacity: 0; transition: opacity 1s ease 0.3s;
+    }
+    #desktop.visible { opacity: 1; }
+    #desktop::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1;
+    }
+
+    /* ══════════════════════════════════════
+       TOP BAR
+       ══════════════════════════════════════ */
+    #topbar {
+      position: fixed; top: 0; left: 0; width: 100%; height: 36px;
+      background: rgba(30,30,32,0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; z-index: 9000;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+    }
+    #topbar-left { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px; color: var(--text); letter-spacing: 2px; }
+    #topbar-center { position: absolute; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 1.5px; }
+    #topbar-right { display: flex; gap: 16px; font-size: 10px; letter-spacing: 1.2px; }
+    .topbar-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 6px; vertical-align: middle; }
+
+    /* ══════════════════════════════════════
+       DOCK
+       ══════════════════════════════════════ */
+    #dock {
+      position: fixed; bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 6px; padding: 8px 12px;
+      background: rgba(30,30,32,0.8);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 14px;
+      z-index: 9000;
+      opacity: 0; transform: translateX(-50%) translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    #dock.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .dock-item {
+      width: 48px; height: 48px; border-radius: 10px;
+      background: rgba(240,235,227,0.04);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .dock-item:hover {
+      background: rgba(240,235,227,0.08);
+      border-color: var(--border-hover);
+      transform: scale(1.12) translateY(-6px);
+    }
+    .dock-item .icon { font-size: 18px; margin-bottom: 2px; }
+    .dock-item .label {
+      font-size: 7px; letter-spacing: 1px;
+      color: var(--text-dim); text-transform: uppercase;
+    }
+    .dock-item:hover .label { color: var(--text-mid); }
+
+    /* ══════════════════════════════════════
+       DESKTOP ICONS
+       ══════════════════════════════════════ */
+    #desktop-icons {
+      position: absolute; top: 56px; right: 24px;
+      display: flex; flex-direction: column; gap: 4px; z-index: 2;
+    }
+    .desktop-icon {
+      width: 80px; padding: 12px 8px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px; border-radius: 8px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .desktop-icon:hover { background: rgba(240,235,227,0.05); }
+    .desktop-icon .icon { font-size: 24px; }
+    .desktop-icon .label { font-size: 9px; color: var(--text-dim); text-align: center; letter-spacing: 0.5px; line-height: 1.3; }
+
+    /* ══════════════════════════════════════
+       WINDOW SYSTEM
+       ══════════════════════════════════════ */
+    .mo-window {
+      position: absolute;
+      min-width: 360px; min-height: 240px;
+      background: var(--win-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      z-index: 100;
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .mo-window.open { opacity: 1; transform: scale(1) translateY(0); }
+    .mo-window.minimized {
+      opacity: 0; transform: scale(0.5) translateY(100px);
+      pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .mo-window.maximized {
+      top: 36px !important; left: 0 !important;
+      width: 100vw !important; height: calc(100vh - 36px) !important;
+      border-radius: 0; border: none;
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .win-titlebar {
+      height: 38px; min-height: 38px;
+      background: var(--win-titlebar);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; cursor: default;
+    }
+    .win-title {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500; font-size: 11px;
+      color: var(--text); letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .win-controls { display: flex; gap: 8px; }
+    .win-btn {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: none; cursor: pointer; transition: opacity 0.2s;
+    }
+    .win-btn:hover { opacity: 0.8; }
+    .win-btn-close { background: #ff5f57; }
+    .win-btn-min { background: #febc2e; }
+    .win-btn-max { background: #28c840; }
+    .win-body {
+      flex: 1; overflow: auto; padding: 20px;
+      color: var(--text); font-size: 12px; line-height: 1.6;
+    }
+    .win-body::-webkit-scrollbar { width: 6px; }
+    .win-body::-webkit-scrollbar-track { background: transparent; }
+    .win-body::-webkit-scrollbar-thumb { background: var(--bg-lighter); border-radius: 3px; }
+
+    /* ══════════════════════════════════════
+       SHARED COMPONENTS
+       ══════════════════════════════════════ */
+    .mo-btn {
+      padding: 7px 14px;
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+      color: var(--accent); font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+      border-radius: 6px; cursor: pointer; transition: background 0.2s;
+    }
+    .mo-btn:hover { background: rgba(204,136,68,0.25); }
+    .mo-btn-sm { padding: 4px 10px; font-size: 9px; }
+    .mo-input {
+      background: rgba(240,235,227,0.05); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 12px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; outline: none;
+      user-select: text !important;
+    }
+    .mo-input:focus { border-color: var(--border-hover); }
+    .section-label {
+      font-size: 9px; letter-spacing: 2px; color: var(--text-dim);
+      margin-bottom: 12px; text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════
+       APP: FILES
+       ══════════════════════════════════════ */
+    .files-layout { display: flex; height: 100%; }
+    .files-sidebar {
+      width: 160px; min-width: 160px;
+      border-right: 1px solid var(--border); padding: 16px 0;
+    }
+    .files-sidebar .loc {
+      padding: 6px 16px; font-size: 11px;
+      color: var(--text-mid); cursor: pointer; transition: background 0.15s;
+    }
+    .files-sidebar .loc:hover { background: rgba(240,235,227,0.04); }
+    .files-sidebar .loc.active { color: var(--accent); background: var(--accent-dim); }
+    .files-main { flex: 1; padding: 16px; overflow-y: auto; }
+    .files-main h2 { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 16px; letter-spacing: 1px; }
+    .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+    .file-item {
+      padding: 16px 12px; border: 1px solid var(--border); border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .file-item:hover { background: rgba(240,235,227,0.04); border-color: var(--border-hover); }
+    .file-item .fi-icon { font-size: 28px; }
+    .file-item .fi-name { font-size: 10px; color: var(--text); text-align: center; letter-spacing: 0.3px; }
+    .file-item .fi-meta { font-size: 9px; color: var(--text-dim); }
+
+    /* ══════════════════════════════════════
+       APP: TERMINAL
+       ══════════════════════════════════════ */
+    .terminal-body {
+      background: #0e0e10; color: #c8c8c8; font-size: 12px;
+      height: 100%; padding: 16px; overflow-y: auto;
+      user-select: text !important;
+    }
+    .term-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-all; }
+    .term-prompt { color: var(--accent); }
+    .term-output { color: #888; }
+    .term-input-line { display: flex; align-items: center; }
+    .term-input {
+      flex: 1; background: none; border: none; outline: none;
+      color: #c8c8c8; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      caret-color: var(--accent); user-select: text !important;
+    }
+
+    /* ══════════════════════════════════════
+       APP: NOTES
+       ══════════════════════════════════════ */
+    .notes-body { display: flex; height: 100%; }
+    .notes-list {
+      width: 180px; min-width: 180px;
+      border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 0;
+    }
+    .note-item {
+      padding: 10px 16px; cursor: pointer; transition: background 0.15s;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .note-item:hover { background: rgba(240,235,227,0.04); }
+    .note-item.active { background: var(--accent-dim); border-left: 2px solid var(--accent); }
+    .note-item .ni-title { font-size: 11px; color: var(--text); font-family: 'Inter', sans-serif; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .note-item .ni-del { font-size: 14px; color: var(--text-dim); cursor: pointer; padding: 0 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+    .note-item:hover .ni-del { opacity: 1; }
+    .note-item .ni-del:hover { color: #ff5f57; }
+    .notes-editor { flex: 1; display: flex; flex-direction: column; padding: 16px; }
+    .notes-editor textarea {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px;
+      line-height: 1.8; resize: none; padding: 0; user-select: text !important;
+    }
+    .notes-editor textarea::placeholder { color: var(--text-dim); }
+
+    /* ══════════════════════════════════════
+       APP: PROJECTS
+       ══════════════════════════════════════ */
+    .projects-body { padding: 20px; overflow-y: auto; height: 100%; }
+    .projects-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .projects-header h2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: 1px; }
+    .project-card {
+      padding: 20px; border: 1px solid var(--border); border-radius: 10px;
+      margin-bottom: 12px; cursor: pointer; position: relative;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .project-card:hover { border-color: var(--border-hover); background: rgba(204,136,68,0.03); }
+    .project-card .pc-num { font-size: 10px; color: var(--accent); letter-spacing: 2px; margin-bottom: 4px; }
+    .project-card .pc-name { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: 1px; }
+    .project-card .pc-desc { font-size: 11px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.5px; }
+    .project-card .pc-del { position: absolute; top: 16px; right: 16px; font-size: 16px; color: var(--text-dim); cursor: pointer; opacity: 0; transition: opacity 0.15s, color 0.15s; }
+    .project-card:hover .pc-del { opacity: 1; }
+    .project-card .pc-del:hover { color: #ff5f57; }
+    .project-detail { padding: 20px; }
+    .project-detail h3 { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .project-detail p { font-size: 12px; color: var(--text-mid); line-height: 1.8; }
+    .project-detail .pd-meta { font-size: 10px; color: var(--text-dim); margin-top: 12px; letter-spacing: 1px; }
+    .project-detail .pd-back { cursor: pointer; color: var(--accent); font-size: 11px; margin-bottom: 16px; display: inline-block; }
+    .project-detail .pd-back:hover { text-decoration: underline; }
+
+    /* ══════════════════════════════════════
+       APP: BROWSER
+       ══════════════════════════════════════ */
+    .browser-layout { display: flex; flex-direction: column; height: 100%; }
+    .browser-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-bottom: 1px solid var(--border);
+      background: var(--win-titlebar); position: relative;
+    }
+    .browser-bar input {
+      flex: 1; background: rgba(240,235,227,0.05); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 12px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; outline: none;
+      user-select: text !important;
+    }
+    .browser-bar input:focus { border-color: var(--border-hover); }
+    .browser-search-results {
+      position: absolute; top: 100%; left: 16px; right: 16px;
+      background: var(--bg-light); border: 1px solid var(--border);
+      border-radius: 8px; max-height: 240px; overflow-y: auto;
+      display: none; z-index: 10;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .browser-search-results.show { display: block; }
+    .bsr-item {
+      padding: 8px 14px; font-size: 11px; color: var(--text-mid);
+      cursor: pointer; transition: background 0.1s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .bsr-item:hover { background: rgba(204,136,68,0.08); }
+    .bsr-item .bsr-type { font-size: 9px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; width: 60px; flex-shrink: 0; }
+    .browser-content { flex: 1; overflow-y: auto; }
+    .browser-home {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 40px; height: 100%;
+    }
+    .browser-home .bc-greeting {
+      font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 300;
+      color: var(--text); letter-spacing: 2px; margin-bottom: 8px;
+    }
+    .browser-home .bc-sub {
+      font-size: 11px; color: var(--text-dim); letter-spacing: 1.5px; margin-bottom: 32px;
+    }
+    .browser-cards { display: flex; gap: 12px; margin-bottom: 32px; }
+    .browser-card {
+      width: 140px; padding: 20px; border: 1px solid var(--border); border-radius: 10px;
+      text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .browser-card:hover { border-color: var(--border-hover); background: rgba(204,136,68,0.04); }
+    .browser-card .bc-icon { font-size: 20px; margin-bottom: 8px; }
+    .browser-card .bc-label { font-size: 10px; color: var(--text-mid); letter-spacing: 1px; text-transform: uppercase; }
+    .browser-ai {
+      width: 400px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px; text-align: left;
+    }
+    .browser-ai h4 { font-size: 10px; letter-spacing: 2px; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; }
+    .ai-chat { max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+    .ai-msg { padding: 6px 0; font-size: 11px; line-height: 1.6; }
+    .ai-msg.user { color: var(--text-mid); }
+    .ai-msg.ai { color: var(--accent); }
+    .ai-input-row { display: flex; gap: 8px; }
+    .ai-input-row input { flex: 1; }
+    .ai-input-row .mo-btn { flex-shrink: 0; }
+
+    /* ══════════════════════════════════════
+       APP: SETTINGS
+       ══════════════════════════════════════ */
+    .settings-layout { display: flex; height: 100%; }
+    .settings-nav {
+      width: 160px; min-width: 160px;
+      border-right: 1px solid var(--border); padding: 16px 0;
+    }
+    .settings-nav .sn-item {
+      padding: 8px 16px; font-size: 11px; color: var(--text-mid);
+      cursor: pointer; transition: background 0.15s; letter-spacing: 0.5px;
+    }
+    .settings-nav .sn-item:hover { background: rgba(240,235,227,0.04); }
+    .settings-nav .sn-item.active { color: var(--accent); background: var(--accent-dim); }
+    .settings-panel { flex: 1; padding: 20px; overflow-y: auto; }
+    .settings-panel h2 {
+      font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600;
+      color: var(--text); margin-bottom: 20px; letter-spacing: 1px;
+    }
+    .setting-section { margin-bottom: 28px; }
+    .wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .wallpaper-opt {
+      height: 80px; border: 2px solid var(--border); border-radius: 8px;
+      cursor: pointer; transition: border-color 0.2s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .wallpaper-opt:hover { border-color: var(--text-dim); transform: scale(1.02); }
+    .wallpaper-opt.active { border-color: var(--accent); }
+    .wallpaper-opt .wp-label {
+      position: absolute; bottom: 4px; left: 6px;
+      font-size: 8px; letter-spacing: 1px; color: rgba(240,235,227,0.6);
+      text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .setting-row .sr-label { font-size: 12px; color: var(--text-mid); }
+    .setting-row .sr-value { font-size: 11px; color: var(--accent); letter-spacing: 0.5px; }
+
+    /* ══════════════════════════════════════
+       NOTIFICATION
+       ══════════════════════════════════════ */
+    #notification {
+      position: fixed; top: 48px; right: 20px;
+      background: var(--bg-light); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 20px;
+      z-index: 9500; opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    #notification.show { opacity: 1; transform: translateY(0); }
+    #notification .n-title { font-size: 9px; letter-spacing: 2px; color: var(--accent); margin-bottom: 4px; }
+    #notification .n-msg { font-size: 11px; color: var(--text-mid); }
+
+    /* ══════════════════════════════════════
+       COMMAND PALETTE
+       ══════════════════════════════════════ */
+    #cmd-palette-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 98000; display: none;
+      justify-content: center; padding-top: 20vh;
+    }
+    #cmd-palette-overlay.open { display: flex; }
+    #cmd-palette {
+      width: 460px; background: var(--bg-light);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+    }
+    #cmd-input {
+      width: 100%; padding: 16px 20px;
+      background: none; border: none; border-bottom: 1px solid var(--border);
+      color: var(--text); font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; outline: none; user-select: text !important;
+    }
+    #cmd-input::placeholder { color: var(--text-dim); }
+    #cmd-results { max-height: 360px; overflow-y: auto; padding: 6px 0; }
+    .cmd-item {
+      padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .cmd-item:hover { background: rgba(204,136,68,0.08); }
+    .cmd-item .ci-icon { font-size: 14px; width: 20px; text-align: center; }
+    .cmd-item .ci-label { font-size: 12px; color: var(--text-mid); }
+    .cmd-item .ci-type { margin-left: auto; font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <!-- BOOT SCREEN -->
+  <div id="boot-screen">
+    <div id="boot-logo">MO OS</div>
+    <div id="boot-log">
+      <div class="line" data-delay="600">INITIALIZING SYSTEM...</div>
+      <div class="line" data-delay="400">LOADING INTERFACE...</div>
+      <div class="line" data-delay="500">CHECKING MODULES...</div>
+      <div class="line" data-delay="350">PREPARING WORKSPACE...</div>
+      <div class="line" data-delay="300">READY</div>
+    </div>
+    <div id="boot-version">MO OS / 01.0</div>
+  </div>
+
+  <!-- DESKTOP -->
+  <div id="desktop">
+    <div class="wallpaper" id="wp-mo-grid"></div>
+    <div class="wallpaper" id="wp-ocean" style="display:none"></div>
+    <div class="wallpaper" id="wp-dusk" style="display:none"></div>
+    <div class="wallpaper" id="wp-ember" style="display:none"></div>
+    <div class="wallpaper" id="wp-slate" style="display:none"></div>
+
+    <div id="topbar">
+      <div id="topbar-left">MO OS</div>
+      <div id="topbar-center"></div>
+      <div id="topbar-right">
+        <span><span class="topbar-dot"></span>ONLINE</span>
+        <span>78%</span>
+        <span id="topbar-clock"></span>
+      </div>
+    </div>
+
+    <div id="desktop-icons">
+      <div class="desktop-icon" data-app="files"><div class="icon">&#128193;</div><div class="label">Files</div></div>
+      <div class="desktop-icon" data-app="projects"><div class="icon">&#9632;</div><div class="label">Projects</div></div>
+      <div class="desktop-icon" data-app="browser"><div class="icon">&#9679;</div><div class="label">Browser</div></div>
+      <div class="desktop-icon" data-app="terminal"><div class="icon">&#9654;</div><div class="label">Terminal</div></div>
+      <div class="desktop-icon" data-app="notes"><div class="icon">&#9998;</div><div class="label">Notes</div></div>
+      <div class="desktop-icon" data-app="settings"><div class="icon">&#9881;</div><div class="label">Settings</div></div>
+    </div>
+
+    <div id="dock">
+      <div class="dock-item" data-app="files"><div class="icon">&#128193;</div><div class="label">Files</div></div>
+      <div class="dock-item" data-app="browser"><div class="icon">&#9679;</div><div class="label">Browse</div></div>
+      <div class="dock-item" data-app="terminal"><div class="icon">&#9654;</div><div class="label">Term</div></div>
+      <div class="dock-item" data-app="notes"><div class="icon">&#9998;</div><div class="label">Notes</div></div>
+      <div class="dock-item" data-app="projects"><div class="icon">&#9632;</div><div class="label">Projects</div></div>
+      <div class="dock-item" data-app="settings"><div class="icon">&#9881;</div><div class="label">Config</div></div>
+    </div>
+  </div>
+
+  <div id="notification">
+    <div class="n-title">SYSTEM</div>
+    <div class="n-msg"></div>
+  </div>
+
+  <div id="cmd-palette-overlay">
+    <div id="cmd-palette">
+      <input id="cmd-input" type="text" placeholder="Search everything..." autocomplete="off">
+      <div id="cmd-results"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════
+       STORAGE HELPERS
+       ══════════════════════════════════════ */
+    function getStore(key, fallback) {
+      try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+      catch(e) { return fallback; }
+    }
+    function setStore(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+    /* default projects if none exist */
+    function ensureDefaultProjects() {
+      if (getStore('mo-projects', null)) return;
+      setStore('mo-projects', [
+        { name: 'MO Digital', desc: 'WEB DEVELOPMENT', notes: 'Main web development agency.' },
+        { name: 'SkillRun', desc: 'EDTECH / PWA', notes: 'Educational technology platform.' },
+        { name: 'Makera', desc: 'TECH PLATFORM', notes: 'Hardware and maker technology.' },
+        { name: 'PRC Pakistan', desc: 'COMMUNITY / EVENTS', notes: 'Community events and workshops.' },
+        { name: 'Aurelius', desc: 'CREATIVE SUITE', notes: 'Creative tools and design suite.' },
+        { name: 'Scentoria', desc: 'BRAND / COMMERCE', notes: 'Brand and commerce platform.' }
+      ]);
+    }
+    ensureDefaultProjects();
+
+    function defaultFiles() {
+      return [
+        { name: 'readme.md', type: 'file', content: '# Welcome to MO OS\n\nA calm, editorial operating system for creators.\n\nBuilt for Hack Club Stardance.' },
+        { name: 'notes.txt', type: 'file', content: 'Ideas for MO OS:\n- Better wallpapers\n- AI integration\n- More keyboard shortcuts' },
+        { name: 'config.json', type: 'file', content: '{\n  "name": "MO OS",\n  "version": "01.0",\n  "theme": "dark"\n}' },
+        { name: 'MO Digital', type: 'folder' },
+        { name: 'SkillRun', type: 'folder' },
+        { name: 'Projects', type: 'folder' }
+      ];
+    }
+    function ensureDefaultFiles() {
+      if (getStore('mo-files', null)) return;
+      setStore('mo-files', defaultFiles());
+    }
+    ensureDefaultFiles();
+
+    function defaultNotes() {
+      return [{ title: 'UNTITLED', body: '', date: new Date().toLocaleDateString() }];
+    }
+
+    /* ══════════════════════════════════════
+       CLOCK
+       ══════════════════════════════════════ */
+    function updateClock() {
+      var now = new Date();
+      var days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+      var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      var d = days[now.getDay()] + ' ' + String(now.getDate()).padStart(2,'0') + ' ' + months[now.getMonth()];
+      var t = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      document.getElementById('topbar-center').textContent = d + ' \u00B7 ' + t;
+      document.getElementById('topbar-clock').textContent = t;
+    }
+    updateClock();
+    setInterval(updateClock, 10000);
+
+    /* ══════════════════════════════════════
+       NOTIFICATIONS
+       ══════════════════════════════════════ */
+    var notifTimer = null;
+    function showNotification(msg) {
+      var el = document.getElementById('notification');
+      el.querySelector('.n-msg').textContent = msg;
+      el.classList.add('show');
+      clearTimeout(notifTimer);
+      notifTimer = setTimeout(function() { el.classList.remove('show'); }, 2500);
+    }
+
+    /* ══════════════════════════════════════
+       BOOT
+       ══════════════════════════════════════ */
+    (function runBoot() {
+      var logo = document.getElementById('boot-logo');
+      var lines = document.querySelectorAll('#boot-log .line');
+      var version = document.getElementById('boot-version');
+      var bootScreen = document.getElementById('boot-screen');
+      var desktop = document.getElementById('desktop');
+      var dock = document.getElementById('dock');
+      setTimeout(function() { logo.classList.add('visible'); }, 300);
+      var totalDelay = 900;
+      lines.forEach(function(line) {
+        var delay = parseInt(line.getAttribute('data-delay'));
+        setTimeout(function() { line.classList.add('visible'); }, totalDelay);
+        totalDelay += delay;
+      });
+      setTimeout(function() { lines[lines.length-1].classList.add('done'); }, totalDelay);
+      setTimeout(function() { version.classList.add('visible'); }, totalDelay + 200);
+      setTimeout(function() { bootScreen.classList.add('fade-out'); desktop.classList.add('visible'); }, totalDelay + 1400);
+      setTimeout(function() { dock.classList.add('visible'); }, totalDelay + 2200);
+      setTimeout(function() { bootScreen.remove(); }, totalDelay + 2500);
+    })();
+
+    /* ══════════════════════════════════════
+       WINDOW MANAGEMENT
+       ══════════════════════════════════════ */
+    var windowZIndex = 100;
+    var openWindows = {};
+    var windowOffsets = {};
+
+    function getOffset(app) {
+      if (!windowOffsets[app]) windowOffsets[app] = 0;
+      var o = windowOffsets[app];
+      windowOffsets[app] += 28;
+      if (windowOffsets[app] > 140) windowOffsets[app] = 0;
+      return o;
+    }
+
+    function createWindow(app, title, w, h, bodyHTML) {
+      if (openWindows[app]) {
+        var existing = openWindows[app];
+        if (existing.classList.contains('minimized')) existing.classList.remove('minimized');
+        bringToFront(existing);
+        return existing;
+      }
+      var offset = getOffset(app);
+      var win = document.createElement('div');
+      win.className = 'mo-window';
+      win.style.width = w + 'px';
+      win.style.height = h + 'px';
+      win.style.left = (120 + offset) + 'px';
+      win.style.top = (60 + offset) + 'px';
+      win.innerHTML =
+        '<div class="win-titlebar">' +
+          '<div class="win-title">' + title + '</div>' +
+          '<div class="win-controls">' +
+            '<button class="win-btn win-btn-min" data-action="minimize"></button>' +
+            '<button class="win-btn win-btn-max" data-action="maximize"></button>' +
+            '<button class="win-btn win-btn-close" data-action="close"></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="win-body">' + bodyHTML + '</div>';
+      document.getElementById('desktop').appendChild(win);
+      openWindows[app] = win;
+      requestAnimationFrame(function() { win.classList.add('open'); });
+      bringToFront(win);
+      setupDrag(win);
+      setupControls(win, app);
+      return win;
+    }
+
+    function bringToFront(win) {
+      windowZIndex++;
+      win.style.zIndex = windowZIndex;
+    }
+
+    function setupControls(win, app) {
+      win.querySelector('.win-controls').addEventListener('click', function(e) {
+        var btn = e.target.closest('.win-btn');
+        if (!btn) return;
+        var action = btn.getAttribute('data-action');
+        if (action === 'close') {
+          win.classList.remove('open');
+          setTimeout(function() { win.remove(); }, 250);
+          delete openWindows[app];
+        } else if (action === 'minimize') {
+          win.classList.add('minimized');
+        } else if (action === 'maximize') {
+          win.classList.toggle('maximized');
+        }
+      });
+      win.addEventListener('mousedown', function() { bringToFront(win); });
+    }
+
+    function setupDrag(win) {
+      var titlebar = win.querySelector('.win-titlebar');
+      var dragging = false, startX, startY, origX, origY;
+      titlebar.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.win-controls')) return;
+        if (win.classList.contains('maximized')) return;
+        dragging = true;
+        startX = e.clientX; startY = e.clientY;
+        origX = win.offsetLeft; origY = win.offsetTop;
+        win.style.transition = 'none';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        win.style.left = (origX + e.clientX - startX) + 'px';
+        win.style.top = (origY + e.clientY - startY) + 'px';
+      });
+      document.addEventListener('mouseup', function() {
+        if (dragging) { dragging = false; win.style.transition = ''; }
+      });
+    }
+
+    /* ══════════════════════════════════════
+       SEARCHABLE DATA INDEX
+       ══════════════════════════════════════ */
+    function buildSearchIndex() {
+      var items = [];
+      var notes = getStore('mo-notes', defaultNotes());
+      notes.forEach(function(n, i) { items.push({ type: 'note', name: n.title, app: 'notes', idx: i }); });
+      var projects = getStore('mo-projects', []);
+      projects.forEach(function(p, i) { items.push({ type: 'project', name: p.name, app: 'projects', idx: i }); });
+      var files = getStore('mo-files', defaultFiles());
+      files.forEach(function(f, i) { items.push({ type: 'file', name: f.name, app: 'files', idx: i }); });
+      return items;
+    }
+
+    /* ══════════════════════════════════════
+       APP: FILES
+       ══════════════════════════════════════ */
+    function filesHTML() {
+      var files = getStore('mo-files', defaultFiles());
+      var fileGrid = '';
+      files.forEach(function(f, i) {
+        var icon = f.type === 'folder' ? '&#128193;' : '&#128196;';
+        var meta = f.type === 'folder' ? 'folder' : (f.content ? f.content.length + ' chars' : 'file');
+        fileGrid += '<div class="file-item" data-file-idx="' + i + '">' +
+          '<div class="fi-icon">' + icon + '</div>' +
+          '<div class="fi-name">' + f.name + '</div>' +
+          '<div class="fi-meta">' + meta + '</div></div>';
+      });
+      return '<div class="files-layout">' +
+        '<div class="files-sidebar">' +
+          '<div class="section-label">LOCATIONS</div>' +
+          '<div class="loc active">All Files</div>' +
+        '</div>' +
+        '<div class="files-main">' +
+          '<h2>ALL FILES</h2>' +
+          '<div class="file-grid">' + fileGrid + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function setupFiles() {
+      var win = openWindows['files'];
+      if (!win) return;
+      win.querySelector('.win-body').addEventListener('click', function(e) {
+        var item = e.target.closest('[data-file-idx]');
+        if (!item) return;
+        var idx = parseInt(item.getAttribute('data-file-idx'));
+        var files = getStore('mo-files', defaultFiles());
+        var file = files[idx];
+        if (!file) return;
+        if (file.type === 'folder') {
+          showNotification('Folder: ' + file.name);
+          return;
+        }
+        openFileViewer(file.name, file.content || '');
+      });
+    }
+
+    function openFileViewer(name, content) {
+      var html = '<div style="padding:4px 0">' +
+        '<div class="section-label" style="margin-bottom:12px">' + name + '</div>' +
+        '<div style="background:#0e0e10;border:1px solid var(--border);border-radius:8px;padding:16px;font-size:12px;line-height:1.8;color:#c8c8c8;white-space:pre-wrap;max-height:300px;overflow-y:auto;user-select:text">' +
+        content + '</div></div>';
+      createWindow('file-' + name, name.toUpperCase(), 500, 360, html);
+    }
+
+    /* ══════════════════════════════════════
+       APP: TERMINAL
+       ══════════════════════════════════════ */
+    function terminalHTML() {
+      return '<div class="terminal-body" id="term-output">' +
+        '<div class="term-line term-output">MO Terminal v01.0</div>' +
+        '<div class="term-line term-output">Type "help" for available commands.</div>' +
+        '<div class="term-line term-output">&nbsp;</div>' +
+        '<div class="term-input-line">' +
+          '<span class="term-prompt">muhammad@mo-os ~ %&nbsp;</span>' +
+          '<input class="term-input" id="term-input" type="text">' +
+        '</div>' +
+      '</div>';
+    }
+
+    function setupTerminal() {
+      var input = document.getElementById('term-input');
+      var output = document.getElementById('term-output');
+      if (!input) return;
+      setTimeout(function() { input.focus(); }, 100);
+      input.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        var cmd = input.value.trim().toLowerCase();
+        var inputLine = input.parentElement;
+        var result = '';
+
+        switch(cmd) {
+          case 'help':
+            result = 'Available commands:\n  help      — Show this message\n  about     — About MO OS\n  projects  — List your projects\n  notes     — List your notes\n  files     — List your files\n  date      — Current date/time\n  system    — System info\n  whoami    — Current user\n  neofetch  — System summary\n  coffee    — Coffee status\n  sudo mo   — Permission check\n  clear     — Clear terminal';
+            break;
+          case 'about':
+            result = 'MO OS v01.0\nA calm, editorial operating system.\nBuilt for Hack Club Stardance.';
+            break;
+          case 'projects':
+            var projs = getStore('mo-projects', []);
+            result = projs.length ? projs.map(function(p) { return '  ' + p.name + ' — ' + p.desc; }).join('\n') : '  No projects yet.';
+            break;
+          case 'notes':
+            var notes = getStore('mo-notes', defaultNotes());
+            result = notes.map(function(n) { return '  ' + n.title; }).join('\n');
+            break;
+          case 'files':
+            var files = getStore('mo-files', defaultFiles());
+            result = files.map(function(f) { return '  ' + (f.type === 'folder' ? '[DIR] ' : '      ') + f.name; }).join('\n');
+            break;
+          case 'date':
+            result = new Date().toString();
+            break;
+          case 'system':
+            result = 'MO OS 01.0\nBrowser  Chromium\nMemory   16 GB\nStatus   ONLINE';
+            break;
+          case 'whoami':
+            result = 'muhammad';
+            break;
+          case 'neofetch':
+            result = '        \u2588\u2588\u2588\u2588\n      \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588       MO OS\n    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      Version 01.0\n      \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588       HTML/CSS/JS\n        \u2588\u2588\u2588\u2588         Chromium\n                     16 GB MEMORY\n                     ONLINE';
+            break;
+          case 'coffee':
+            result = 'COFFEE STATUS\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 82%\n\nContinue building.';
+            break;
+          case 'sudo mo':
+            result = 'permission granted.\nyou already own the machine.';
+            break;
+          case 'clear':
+            output.innerHTML = '<div class="term-input-line"><span class="term-prompt">muhammad@mo-os ~ %&nbsp;</span><input class="term-input" id="term-input" type="text"></div>';
+            setupTerminal();
+            return;
+          case '':
+            break;
+          default:
+            result = 'command not found: ' + cmd + '\nType "help" for available commands.';
+        }
+
+        var execLine = document.createElement('div');
+        execLine.className = 'term-line';
+        execLine.innerHTML = '<span class="term-prompt">muhammad@mo-os ~ %&nbsp;</span>' + cmd;
+        output.insertBefore(execLine, inputLine);
+
+        if (result) {
+          var resLine = document.createElement('div');
+          resLine.className = 'term-line term-output';
+          resLine.textContent = result;
+          output.insertBefore(resLine, inputLine);
+        }
+
+        var spacer = document.createElement('div');
+        spacer.className = 'term-line';
+        spacer.innerHTML = '&nbsp;';
+        output.insertBefore(spacer, inputLine);
+
+        input.value = '';
+        output.scrollTop = output.scrollHeight;
+      });
+    }
+
+    /* ══════════════════════════════════════
+       APP: NOTES
+       ══════════════════════════════════════ */
+    function notesHTML() {
+      var notes = getStore('mo-notes', defaultNotes());
+      var listHTML = '';
+      notes.forEach(function(n, i) {
+        listHTML += '<div class="note-item' + (i===0?' active':'') + '" data-idx="' + i + '">' +
+          '<div class="ni-title">' + (n.title||'Untitled') + '</div>' +
+          '<div class="ni-del" data-del="' + i + '">&times;</div></div>';
+      });
+      return '<div class="notes-body">' +
+        '<div class="notes-list" id="notes-list">' + listHTML + '</div>' +
+        '<div class="notes-editor">' +
+          '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+            '<button class="mo-btn" id="notes-new">+ NEW NOTE</button>' +
+          '</div>' +
+          '<textarea id="notes-textarea" placeholder="Start writing...">' + (notes[0] ? notes[0].body : '') + '</textarea>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function setupNotes() {
+      var saved = getStore('mo-notes', defaultNotes());
+      var notes = saved;
+      var currentIdx = 0;
+
+      function saveNotes() { setStore('mo-notes', notes); }
+
+      function renderList() {
+        var list = document.getElementById('notes-list');
+        if (!list) return;
+        list.innerHTML = '';
+        notes.forEach(function(n, i) {
+          var div = document.createElement('div');
+          div.className = 'note-item' + (i === currentIdx ? ' active' : '');
+          div.setAttribute('data-idx', i);
+          div.innerHTML = '<div class="ni-title">' + (n.title || 'Untitled') + '</div>' +
+            '<div class="ni-del" data-del="' + i + '">&times;</div>';
+          div.querySelector('.ni-title').addEventListener('click', function() {
+            currentIdx = i;
+            document.getElementById('notes-textarea').value = notes[i].body;
+            renderList();
+          });
+          div.querySelector('.ni-del').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (notes.length <= 1) { showNotification('Cannot delete last note.'); return; }
+            notes.splice(i, 1);
+            if (currentIdx >= notes.length) currentIdx = notes.length - 1;
+            saveNotes();
+            renderList();
+            document.getElementById('notes-textarea').value = notes[currentIdx].body;
+            showNotification('Note deleted.');
+          });
+          list.appendChild(div);
+        });
+      }
+
+      var textarea = document.getElementById('notes-textarea');
+      if (textarea) {
+        textarea.addEventListener('input', function() {
+          notes[currentIdx].body = textarea.value;
+          var firstLine = textarea.value.split('\n')[0].trim();
+          notes[currentIdx].title = firstLine || 'Untitled';
+          notes[currentIdx].date = new Date().toLocaleDateString();
+          saveNotes();
+          renderList();
+        });
+      }
+
+      var newBtn = document.getElementById('notes-new');
+      if (newBtn) {
+        newBtn.addEventListener('click', function() {
+          notes.unshift({ title: 'UNTITLED', body: '', date: new Date().toLocaleDateString() });
+          currentIdx = 0;
+          textarea.value = '';
+          saveNotes();
+          renderList();
+          showNotification('New note created.');
+        });
+      }
+
+      renderList();
+    }
+
+    /* ══════════════════════════════════════
+       APP: PROJECTS
+       ══════════════════════════════════════ */
+    function projectsHTML() {
+      var projects = getStore('mo-projects', []);
+      var cards = '';
+      projects.forEach(function(p, i) {
+        cards += '<div class="project-card" data-proj-idx="' + i + '">' +
+          '<div class="pc-num">' + String(i + 1).padStart(2, '0') + '</div>' +
+          '<div class="pc-name">' + p.name + '</div>' +
+          '<div class="pc-desc">' + p.desc + '</div>' +
+          '<div class="pc-del" data-del-proj="' + i + '">&times;</div>' +
+        '</div>';
+      });
+      return '<div class="projects-body">' +
+        '<div class="projects-header">' +
+          '<h2>PROJECTS</h2>' +
+          '<button class="mo-btn" id="proj-new">+ NEW PROJECT</button>' +
+        '</div>' +
+        '<div id="proj-list">' + cards + '</div>' +
+      '</div>';
+    }
+
+    function setupProjects() {
+      var win = openWindows['projects'];
+      if (!win) return;
+      var body = win.querySelector('.win-body');
+
+      function renderProjects() {
+        var projects = getStore('mo-projects', []);
+        var list = body.querySelector('#proj-list');
+        if (!list) return;
+        var cards = '';
+        projects.forEach(function(p, i) {
+          cards += '<div class="project-card" data-proj-idx="' + i + '">' +
+            '<div class="pc-num">' + String(i + 1).padStart(2, '0') + '</div>' +
+            '<div class="pc-name">' + p.name + '</div>' +
+            '<div class="pc-desc">' + p.desc + '</div>' +
+            '<div class="pc-del" data-del-proj="' + i + '">&times;</div>' +
+          '</div>';
+        });
+        list.innerHTML = cards;
+      }
+
+      body.addEventListener('click', function(e) {
+        var delBtn = e.target.closest('[data-del-proj]');
+        if (delBtn) {
+          e.stopPropagation();
+          var idx = parseInt(delBtn.getAttribute('data-del-proj'));
+          var projects = getStore('mo-projects', []);
+          projects.splice(idx, 1);
+          setStore('mo-projects', projects);
+          renderProjects();
+          showNotification('Project deleted.');
+          return;
+        }
+        var card = e.target.closest('[data-proj-idx]');
+        if (card) {
+          var idx = parseInt(card.getAttribute('data-proj-idx'));
+          var projects = getStore('mo-projects', []);
+          var p = projects[idx];
+          if (p) openProjectDetail(p.name, p.desc, p.notes || '');
+        }
+      });
+
+      var newBtn = body.querySelector('#proj-new');
+      if (newBtn) {
+        newBtn.addEventListener('click', function() {
+          var name = prompt('Project name:');
+          if (!name) return;
+          var desc = prompt('Description (e.g. WEB DEVELOPMENT):') || '';
+          var projects = getStore('mo-projects', []);
+          projects.push({ name: name.toUpperCase(), desc: desc.toUpperCase(), notes: '' });
+          setStore('mo-projects', projects);
+          renderProjects();
+          showNotification('Project created.');
+        });
+      }
+    }
+
+    function openProjectDetail(name, desc, notes) {
+      var html = '<div class="project-detail">' +
+        '<div class="pd-back" id="pd-back">&larr; BACK</div>' +
+        '<h3>' + name + '</h3>' +
+        '<div class="pd-meta">' + desc + '</div>' +
+        '<p style="margin-top:16px">' + (notes || 'No notes yet.') + '</p>' +
+      '</div>';
+      createWindow('project-' + name, name, 500, 360, html);
+      setTimeout(function() {
+        var win = openWindows['project-' + name];
+        if (win) {
+          var back = win.querySelector('#pd-back');
+          if (back) back.addEventListener('click', function() {
+            win.classList.remove('open');
+            setTimeout(function() { win.remove(); }, 250);
+            delete openWindows['project-' + name];
+          });
+        }
+      }, 50);
+    }
+
+    /* ══════════════════════════════════════
+       APP: BROWSER (with AI + Search)
+       ══════════════════════════════════════ */
+    var searchSuggestions = [
+      'apple', 'application', 'architecture', 'artificial intelligence',
+      'banana', 'build', 'browser', 'bootstrap',
+      'create', 'code', 'css', 'creative',
+      'design', 'develop', 'documentation', 'desktop',
+      'edit', 'engine', 'editor', 'explore',
+      'files', 'finder', 'folder', 'framework',
+      'gallery', 'github', 'google', 'graphic',
+      'html', 'hosting', 'help', 'hardware',
+      'internet', 'interface', 'icons', 'image',
+      'javascript', 'json', 'jquery', 'jetpack',
+      'keyboard', 'kotlin', 'kubernetes',
+      'language', 'linux', 'library', 'launch',
+      'music', 'mo os', 'mobile', 'mac',
+      'notes', 'network', 'node', 'navigation',
+      'open', 'online', 'operating system', 'optimization',
+      'projects', 'photoshop', 'python', 'programming',
+      'query', 'quality', 'quick',
+      'react', 'rust', 'robust', 'responsive',
+      'settings', 'search', 'software', 'system',
+      'terminal', 'theme', 'technology', 'typescript',
+      'update', 'ui', 'ux', 'upload',
+      'visual', 'video', 'version', 'virtual',
+      'website', 'windows', 'workspace', 'web',
+      'xml', 'xcode',
+      'youtube', 'year',
+      'zip', 'zoom'
+    ];
+
+    var aiResponses = {
+      'hello': 'Hello! I am MO AI. How can I help you build today?',
+      'hi': 'Hey! Ready to create something amazing?',
+      'help': 'I can help with coding questions, project ideas, or just chat. Try asking about HTML, CSS, JavaScript, or project planning.',
+      'what is mo os': 'MO OS is a calm, editorial operating system built for creators. Made for Hack Club Stardance.',
+      'who made this': 'Built by MO Digital for Hack Club Stardance.',
+      'html': 'HTML (HyperText Markup Language) is the standard markup for web pages. Want me to explain any specific element?',
+      'css': 'CSS (Cascading Style Sheets) controls the visual presentation of HTML. It handles layout, colors, typography, and more.',
+      'javascript': 'JavaScript is a programming language that adds interactivity to websites. It runs in the browser and on servers (Node.js).',
+      'project ideas': 'Here are some ideas: a portfolio site, a weather app, a task manager, a music visualizer, or a collaborative whiteboard.',
+      'how to start coding': 'Start with HTML + CSS to build static pages, then add JavaScript for interactivity. Practice on freeCodeCamp or MDN.',
+      'what should i build': 'Build something you would use yourself. A personal dashboard, a note-taking app, or a tool that solves a real problem.',
+      'thank you': 'You are welcome! Keep building.',
+      'thanks': 'Anytime! Let me know if you need more help.'
+    };
+
+    function browserHTML() {
+      return '<div class="browser-layout">' +
+        '<div class="browser-bar">' +
+          '<input type="text" value="" placeholder="Search or type a URL..." id="browser-url" autocomplete="off">' +
+          '<div class="browser-search-results" id="browser-search-results"></div>' +
+        '</div>' +
+        '<div class="browser-content" id="browser-content">' +
+          '<div class="browser-home">' +
+            '<div class="bc-greeting">GOOD AFTERNOON.</div>' +
+            '<div class="bc-sub">WHAT ARE YOU BUILDING TODAY?</div>' +
+            '<div class="browser-cards">' +
+              '<div class="browser-card" data-baction="projects"><div class="bc-icon">&#9632;</div><div class="bc-label">Projects</div></div>' +
+              '<div class="browser-card" data-baction="files"><div class="bc-icon">&#128193;</div><div class="bc-label">Files</div></div>' +
+              '<div class="browser-card" data-baction="notes"><div class="bc-icon">&#9998;</div><div class="bc-label">Notes</div></div>' +
+            '</div>' +
+            '<div class="browser-ai">' +
+              '<h4>MO AI ASSISTANT</h4>' +
+              '<div class="ai-chat" id="ai-chat"></div>' +
+              '<div class="ai-input-row">' +
+                '<input class="mo-input" id="ai-input" type="text" placeholder="Ask me anything...">' +
+                '<button class="mo-btn" id="ai-send">SEND</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function setupBrowser() {
+      var win = openWindows['browser'];
+      if (!win) return;
+      var urlInput = win.querySelector('#browser-url');
+      var searchResults = win.querySelector('#browser-search-results');
+      var content = win.querySelector('#browser-content');
+
+      // search autocomplete
+      urlInput.addEventListener('input', function() {
+        var val = this.value.trim().toLowerCase();
+        if (!val) { searchResults.classList.remove('show'); return; }
+        var matches = searchSuggestions.filter(function(s) { return s.indexOf(val) === 0; }).slice(0, 8);
+        if (matches.length === 0) { searchResults.classList.remove('show'); return; }
+        searchResults.innerHTML = '';
+        matches.forEach(function(m) {
+          var div = document.createElement('div');
+          div.className = 'bsr-item';
+          div.innerHTML = '<span class="bsr-type">search</span><span>' + m + '</span>';
+          div.addEventListener('click', function() {
+            urlInput.value = m;
+            searchResults.classList.remove('show');
+          });
+          searchResults.appendChild(div);
+        });
+        searchResults.classList.add('show');
+      });
+
+      urlInput.addEventListener('blur', function() {
+        setTimeout(function() { searchResults.classList.remove('show'); }, 200);
+      });
+
+      // quick action cards
+      content.addEventListener('click', function(e) {
+        var card = e.target.closest('[data-baction]');
+        if (card) {
+          openApp(card.getAttribute('data-baction'));
+        }
+      });
+
+      // AI chat
+      var aiInput = win.querySelector('#ai-input');
+      var aiChat = win.querySelector('#ai-chat');
+      var aiSend = win.querySelector('#ai-send');
+
+      function sendAI() {
+        var msg = aiInput.value.trim().toLowerCase();
+        if (!msg) return;
+        var userDiv = document.createElement('div');
+        userDiv.className = 'ai-msg user';
+        userDiv.textContent = 'You: ' + aiInput.value.trim();
+        aiChat.appendChild(userDiv);
+
+        var reply = aiResponses[msg];
+        if (!reply) {
+          var keys = Object.keys(aiResponses);
+          for (var i = 0; i < keys.length; i++) {
+            if (msg.indexOf(keys[i]) > -1 || keys[i].indexOf(msg) > -1) {
+              reply = aiResponses[keys[i]];
+              break;
+            }
+          }
+        }
+        if (!reply) {
+          reply = 'Interesting question. I am a simulated AI — try asking about HTML, CSS, JavaScript, project ideas, or type "help" for suggestions.';
+        }
+
+        var aiDiv = document.createElement('div');
+        aiDiv.className = 'ai-msg ai';
+        aiDiv.textContent = 'MO AI: ' + reply;
+        aiChat.appendChild(aiDiv);
+        aiInput.value = '';
+        aiChat.scrollTop = aiChat.scrollHeight;
+      }
+
+      aiSend.addEventListener('click', sendAI);
+      aiInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendAI(); });
+    }
+
+    /* ══════════════════════════════════════
+       APP: SETTINGS
+       ══════════════════════════════════════ */
+    function settingsHTML() {
+      var wpId = localStorage.getItem('mo-wallpaper') || 'wp-mo-grid';
+      var wallpapers = [
+        { id: 'wp-mo-grid', name: 'MO Grid', color: 'linear-gradient(135deg, #1a1d23, #222830)', pattern: 'linear-gradient(rgba(204,136,68,0.15) 1px, transparent 1px),linear-gradient(90deg, rgba(204,136,68,0.15) 1px, transparent 1px)', size: '16px 16px' },
+        { id: 'wp-ocean', name: 'Ocean', color: 'linear-gradient(135deg, #0d1b2a, #1b3a5c)', pattern: '', size: '' },
+        { id: 'wp-dusk', name: 'Dusk', color: 'linear-gradient(135deg, #1a1020, #3d1f5c)', pattern: '', size: '' },
+        { id: 'wp-ember', name: 'Ember', color: 'linear-gradient(135deg, #1a1410, #5c3010)', pattern: '', size: '' },
+        { id: 'wp-slate', name: 'Slate', color: 'linear-gradient(135deg, #1e2024, #2a2c30)', pattern: 'linear-gradient(rgba(240,235,227,0.06) 1px, transparent 1px),linear-gradient(90deg, rgba(240,235,227,0.06) 1px, transparent 1px)', size: '40px 40px' }
+      ];
+      var wpHTML = '';
+      wallpapers.forEach(function(w) {
+        var bgStyle = 'background:' + w.color;
+        if (w.pattern) bgStyle += ';background-image:' + w.pattern + ';background-size:' + w.size;
+        wpHTML += '<div class="wallpaper-opt' + (w.id === wpId ? ' active' : '') + '" data-wp="' + w.id + '">' +
+          '<div style="width:100%;height:100%;' + bgStyle + '"></div>' +
+          '<div class="wp-label">' + w.name + '</div></div>';
+      });
+      return '<div class="settings-layout">' +
+        '<div class="settings-nav">' +
+          '<div class="sn-item active" data-stab="appearance">Appearance</div>' +
+          '<div class="sn-item" data-stab="system">System</div>' +
+        '</div>' +
+        '<div class="settings-panel">' +
+          '<h2>APPEARANCE</h2>' +
+          '<div class="setting-section">' +
+            '<div class="section-label">WALLPAPER</div>' +
+            '<div class="wallpaper-grid" id="wp-grid">' + wpHTML + '</div>' +
+          '</div>' +
+          '<div class="setting-section">' +
+            '<div class="section-label">SYSTEM</div>' +
+            '<div class="setting-row"><span class="sr-label">Version</span><span class="sr-value">MO OS 01.0</span></div>' +
+            '<div class="setting-row"><span class="sr-label">Engine</span><span class="sr-value">HTML / CSS / JS</span></div>' +
+            '<div class="setting-row"><span class="sr-label">Browser</span><span class="sr-value">Chromium</span></div>' +
+            '<div class="setting-row"><span class="sr-label">Memory</span><span class="sr-value">16 GB</span></div>' +
+            '<div class="setting-row"><span class="sr-label">Status</span><span class="sr-value">ONLINE</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function setupSettings() {
+      var win = openWindows['settings'];
+      if (!win) return;
+      var body = win.querySelector('.win-body');
+
+      body.addEventListener('click', function(e) {
+        var opt = e.target.closest('.wallpaper-opt');
+        if (opt) {
+          var wpId = opt.getAttribute('data-wp');
+          document.querySelectorAll('.wallpaper').forEach(function(w) { w.style.display = 'none'; });
+          document.getElementById(wpId).style.display = '';
+          body.querySelectorAll('.wallpaper-opt').forEach(function(o) { o.classList.remove('active'); });
+          opt.classList.add('active');
+          localStorage.setItem('mo-wallpaper', wpId);
+          showNotification('Wallpaper changed.');
+        }
+        var tab = e.target.closest('[data-stab]');
+        if (tab) {
+          body.querySelectorAll('.sn-item').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+        }
+      });
+
+      var saved = localStorage.getItem('mo-wallpaper') || 'wp-mo-grid';
+      document.querySelectorAll('.wallpaper').forEach(function(w) { w.style.display = 'none'; });
+      document.getElementById(saved).style.display = '';
+    }
+
+    /* ══════════════════════════════════════
+       OPEN APP
+       ══════════════════════════════════════ */
+    function openApp(app) {
+      switch(app) {
+        case 'files':
+          createWindow('files', 'FINDER', 640, 420, filesHTML());
+          setTimeout(setupFiles, 50);
+          break;
+        case 'terminal':
+          createWindow('terminal', 'TERMINAL', 560, 380, terminalHTML());
+          setTimeout(setupTerminal, 50);
+          break;
+        case 'notes':
+          createWindow('notes', 'NOTES', 600, 420, notesHTML());
+          setTimeout(setupNotes, 50);
+          break;
+        case 'projects':
+          createWindow('projects', 'PROJECTS', 520, 440, projectsHTML());
+          setTimeout(setupProjects, 50);
+          break;
+        case 'browser':
+          createWindow('browser', 'BROWSER', 700, 500, browserHTML());
+          setTimeout(setupBrowser, 50);
+          break;
+        case 'settings':
+          createWindow('settings', 'SETTINGS', 600, 420, settingsHTML());
+          setTimeout(setupSettings, 50);
+          break;
+      }
+      showNotification(app.charAt(0).toUpperCase() + app.slice(1) + ' opened.');
+    }
+
+    /* ══════════════════════════════════════
+       DOCK + DESKTOP ICON CLICKS
+       ══════════════════════════════════════ */
+    document.addEventListener('click', function(e) {
+      var target = e.target.closest('[data-app]');
+      if (target && !target.closest('.mo-window')) {
+        openApp(target.getAttribute('data-app'));
+      }
+    });
+
+    /* ══════════════════════════════════════
+       COMMAND PALETTE (Ctrl+K)
+       ══════════════════════════════════════ */
+    function renderCmdResults(query) {
+      var container = document.getElementById('cmd-results');
+      var allItems = buildSearchIndex();
+      var apps = [
+        { type: 'app', name: 'Open Terminal', app: 'terminal' },
+        { type: 'app', name: 'Open Files', app: 'files' },
+        { type: 'app', name: 'Open Projects', app: 'projects' },
+        { type: 'app', name: 'Open Settings', app: 'settings' },
+        { type: 'app', name: 'Open Notes', app: 'notes' },
+        { type: 'app', name: 'Open Browser', app: 'browser' }
+      ];
+      allItems = apps.concat(allItems);
+
+      var q = query.toLowerCase();
+      var filtered = q ? allItems.filter(function(item) {
+        return item.name.toLowerCase().indexOf(q) > -1;
+      }).slice(0, 10) : apps;
+
+      container.innerHTML = '';
+      filtered.forEach(function(item) {
+        var div = document.createElement('div');
+        div.className = 'cmd-item';
+        var icon = item.type === 'note' ? '&#9998;' : item.type === 'project' ? '&#9632;' : item.type === 'file' ? '&#128196;' : '&#9654;';
+        div.innerHTML = '<span class="ci-icon">' + icon + '</span><span class="ci-label">' + item.name + '</span><span class="ci-type">' + item.type + '</span>';
+        div.addEventListener('click', function() {
+          document.getElementById('cmd-palette-overlay').classList.remove('open');
+          openApp(item.app);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        var overlay = document.getElementById('cmd-palette-overlay');
+        overlay.classList.toggle('open');
+        if (overlay.classList.contains('open')) {
+          var input = document.getElementById('cmd-input');
+          input.value = '';
+          renderCmdResults('');
+          input.focus();
+        }
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('cmd-palette-overlay').classList.remove('open');
+      }
+    });
+
+    document.getElementById('cmd-input').addEventListener('input', function(e) {
+      renderCmdResults(e.target.value);
+    });
+    document.getElementById('cmd-palette-overlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    /* ══════════════════════════════════════
+       WALLPAPER ON LOAD
+       ══════════════════════════════════════ */
+    (function() {
+      var saved = localStorage.getItem('mo-wallpaper') || 'wp-mo-grid';
+      document.querySelectorAll('.wallpaper').forEach(function(w) { w.style.display = 'none'; });
+      document.getElementById(saved).style.display = '';
+    })();
+  </script>
+</body>
+</html>
