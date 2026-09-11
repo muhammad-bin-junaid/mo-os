@@ -1,29 +1,29 @@
-# MO OS
+# MO OS — Developer Edition
 
-A calm, editorial operating system for creators.
+A calm, editorial operating system for software developers.
 
 ## About
 
 MO OS was created from scratch using HTML, CSS, and a bit of JavaScript. AI was used only to assist with some of the JavaScript development. The concept, design, features, and overall direction were created and put together by me.
 
-## Development Time: ~3 hours
+## Development Time: ~5.5 hours
 
-- **1 hr** — Planning & compiling
-- **1 hr** — Coding & building
+- **1.5 hr** — Planning & compiling
+- **3 hr** — Coding & building
 - **1 hr** — Testing, fixing & polishing
-
-This is still a work in progress, but I wanted to make something that feels a little different from a normal website.
 
 ## Features
 
-- Boot sequence animation
+- Boot sequence with progress bar and glow animation
 - Desktop with wallpaper system (5 wallpapers)
 - Window manager (drag, minimize, maximize, close)
 - Files & Folders (create, open, browse)
-- Terminal with commands (help, about, neofetch, coffee, etc.)
+- Terminal with commands (help, about, neofetch, coffee, maps, music, etc.)
 - Notes with auto-save
 - Projects manager (create, edit, delete)
-- Browser with search & AI assistant
+- Browser with search, AI assistant, Google integration
+- Music player with step sequencer builder (Web Audio API)
+- Maps (Google Maps embed)
 - Dino game
 - Calculator
 - Calendar
