@@ -1,4 +1,3 @@
-    /* ── STORAGE ── */
     function getStore(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
     function setStore(k,v){localStorage.setItem(k,JSON.stringify(v))}
     function ensureDefaults(){
@@ -19,7 +18,6 @@
     }
     ensureDefaults();
 
-    /* ── CLOCK (runs immediately) ── */
     function updateClock(){
       var now=new Date(),days=['SUN','MON','TUE','WED','THU','FRI','SAT'],months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
       var d=days[now.getDay()]+' '+String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()];
@@ -42,11 +40,9 @@
     }
     updateClock(); setInterval(updateClock,1000);
 
-    /* ── NOTIFICATIONS ── */
     var notifTimer=null;
     function showNotification(msg){var el=document.getElementById('notification');el.querySelector('.n-msg').textContent=msg;el.classList.add('show');clearTimeout(notifTimer);notifTimer=setTimeout(function(){el.classList.remove('show')},2500);}
 
-    /* ── BOOT ── */
     function checkFullscreen(){
       var fw=document.getElementById('fullscreen-warn');
       if(!fw)return;
@@ -95,7 +91,6 @@
     })();
     initLockScreen();
 
-    /* ── CUSTOM MODAL (replaces browser prompt) ── */
     function moPrompt(title, fields){
       return new Promise(function(resolve){
         var overlay=document.getElementById('mo-modal-overlay');
@@ -129,7 +124,6 @@
       });
     }
 
-    /* ── LOCK SCREEN / OPENING SCREEN ── */
     var lockKeyHandler=null;
     function initLockScreen(){
       var lockScreen=document.getElementById('lock-screen');
@@ -193,13 +187,13 @@
       document.addEventListener('keydown',lockKeyHandler);
     }
 
-    /* ── WINDOW MANAGEMENT ── */
-    var windowZIndex=100,openWindows={},windowOffsets={};
-    function getOffset(app){if(!windowOffsets[app])windowOffsets[app]=0;var o=windowOffsets[app];windowOffsets[app]+=28;if(windowOffsets[app]>140)windowOffsets[app]=0;return o;}
+    var windowZIndex=100,openWindows={};
     function createWindow(app,title,w,h,bodyHTML){
       if(openWindows[app]){var ex=openWindows[app];if(ex.classList.contains('minimized'))ex.classList.remove('minimized');bringToFront(ex);return ex;}
-      var offset=getOffset(app),win=document.createElement('div');
-      win.className='mo-window';win.style.width=w+'px';win.style.height=h+'px';win.style.left=(120+offset)+'px';win.style.top=(60+offset)+'px';
+      var win=document.createElement('div');
+      var cx=Math.max(0,(window.innerWidth-w)/2);
+      var cy=Math.max(36,(window.innerHeight-h)/2);
+      win.className='mo-window';win.style.width=w+'px';win.style.height=h+'px';win.style.left=cx+'px';win.style.top=cy+'px';
       win.innerHTML='<div class="win-titlebar"><div class="win-title">'+title+'</div><div class="win-controls"><button class="win-btn win-btn-min" data-action="minimize"></button><button class="win-btn win-btn-max" data-action="maximize"></button><button class="win-btn win-btn-close" data-action="close"></button></div></div><div class="win-body">'+bodyHTML+'</div>';
       document.getElementById('desktop').appendChild(win);openWindows[app]=win;
       requestAnimationFrame(function(){win.classList.add('open')});bringToFront(win);setupDrag(win);setupControls(win,app);return win;
@@ -222,7 +216,6 @@
       document.addEventListener('mouseup',function(){if(dragging){dragging=false;win.style.transition='';}});
     }
 
-    /* ── SEARCH INDEX ── */
     function buildSearchIndex(){
       var items=[];
       getStore('mo-notes',[{title:'UNTITLED',body:'',date:''}]).forEach(function(n,i){items.push({type:'note',name:n.title,app:'notes'});});
@@ -232,9 +225,6 @@
       return items;
     }
 
-    /* ══════════════════════════════════════
-       APP: FILES (with folder creation + opening)
-       ══════════════════════════════════════ */
     function filesHTML(){
       var files=getStore('mo-files',[]),folders=getStore('mo-folders',[]);
       var fileGrid='';
@@ -298,9 +288,6 @@
       createWindow('folder-'+name,name.toUpperCase(),500,360,html);
     }
 
-    /* ══════════════════════════════════════
-       APP: TERMINAL
-       ══════════════════════════════════════ */
     function terminalHTML(){
       return '<div class="terminal-body" id="term-output"><div class="term-line term-output">MO Terminal v01.0</div><div class="term-line term-output">Type "help" for available commands.</div><div class="term-line term-output">&nbsp;</div><div class="term-input-line"><span class="term-prompt">muhammad@mo-os ~ %&nbsp;</span><input class="term-input" id="term-input" type="text"></div></div>';
     }
@@ -337,9 +324,6 @@
       });
     }
 
-    /* ══════════════════════════════════════
-       APP: NOTES
-       ══════════════════════════════════════ */
     function notesHTML(){
       var notes=getStore('mo-notes',[{title:'UNTITLED',body:'',date:new Date().toLocaleDateString()}]);
       var listHTML='';notes.forEach(function(n,i){listHTML+='<div class="note-item'+(i===0?' active':'')+'" data-idx="'+i+'"><div class="ni-title">'+(n.title||'Untitled')+'</div><div class="ni-del" data-del="'+i+'">&times;</div></div>';});
@@ -365,9 +349,6 @@
       renderList();
     }
 
-    /* ══════════════════════════════════════
-       APP: PROJECTS
-       ══════════════════════════════════════ */
     function projectsHTML(){
       var projects=getStore('mo-projects',[]);var cards='';
       projects.forEach(function(p,i){cards+='<div class="project-card" data-proj-idx="'+i+'"><div class="pc-num">'+String(i+1).padStart(2,'0')+'</div><div class="pc-name">'+p.name+'</div><div class="pc-desc">'+p.desc+'</div><div class="pc-del" data-del-proj="'+i+'">&times;</div></div>';});
@@ -400,9 +381,6 @@
       setTimeout(function(){var w=openWindows['project-'+name];if(w){var b=w.querySelector('#pd-back');if(b) b.addEventListener('click',function(){w.classList.remove('open');setTimeout(function(){w.remove()},250);delete openWindows['project-'+name];});}},50);
     }
 
-    /* ══════════════════════════════════════
-       APP: BROWSER (Chrome-like with tabs, nav, AI)
-       ══════════════════════════════════════ */
     var aiDictionary={
       'hello':'Hello! I am MO AI. How can I help you build today?','hi':'Hey! Ready to create something amazing?','hey':'Hey there! What are you working on?','yo':'Yo! Need help with code or design?',
       'help':'Try asking about HTML, CSS, JavaScript, project ideas, or type "what can you do" for a full list.',
@@ -1509,8 +1487,41 @@
     /* ── CLICK HANDLERS ── */
     document.addEventListener('click',function(e){
       var t=e.target.closest('[data-app]');
-      if(t&&!t.closest('.mo-window'))openApp(t.getAttribute('data-app'));
+      if(t&&!t.closest('.mo-window')&&!t.closest('.dock-item')&&t.classList.contains('desktop-icon')&&t.getAttribute('data-was-dragged')!=='true')openApp(t.getAttribute('data-app'));
+      if(t&&t.closest('.dock-item'))openApp(t.closest('.dock-item').getAttribute('data-app'));
     });
+
+    /* ── DESKTOP ICON DRAG ── */
+    (function(){
+      document.addEventListener('mousedown',function(e){
+        var icon=e.target.closest('.desktop-icon');
+        if(!icon)return;
+        if(e.button!==0)return;
+        var dragging=false,startX=e.clientX,startY=e.clientY,origLeft=icon.offsetLeft,origTop=icon.offsetTop;
+        icon.setAttribute('data-was-dragged','false');
+        function onMove(ev){
+          var dx=ev.clientX-startX,dy=ev.clientY-startY;
+          if(Math.abs(dx)>4||Math.abs(dy)>4)dragging=true;
+          if(dragging){
+            icon.style.position='absolute';
+            icon.style.left=(origLeft+dx)+'px';
+            icon.style.top=(origTop+dy)+'px';
+            icon.style.zIndex='50';
+            icon.setAttribute('data-was-dragged','true');
+          }
+        }
+        function onUp(){
+          document.removeEventListener('mousemove',onMove);
+          document.removeEventListener('mouseup',onUp);
+          if(dragging){
+            icon.style.zIndex='';
+            setTimeout(function(){icon.setAttribute('data-was-dragged','false');},50);
+          }
+        }
+        document.addEventListener('mousemove',onMove);
+        document.addEventListener('mouseup',onUp);
+      });
+    })();
 
     /* ── COMMAND PALETTE ── */
     function renderCmdResults(query){

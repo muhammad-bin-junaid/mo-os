@@ -1,140 +1,135 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MO OS</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231c1c1e'/><text x='50' y='62' font-family='system-ui,sans-serif' font-weight='700' font-size='38' fill='%23cc8844' text-anchor='middle'>MO</text></svg>">
-  <link rel="stylesheet" href="style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MO OS</title>
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231c1c1e'/><text x='50' y='62' font-family='system-ui,sans-serif' font-weight='700' font-size='38' fill='%23cc8844' text-anchor='middle'>MO</text></svg>">
+	<link rel="stylesheet" href="newstyle.css">
 </head>
 <body>
 
-  <!-- MOBILE BLOCKER -->
-  <div id="mobile-blocker">
-    <div class="mb-icon">&#128241;</div>
-    <div class="mb-title">MO OS</div>
-    <div class="mb-sub">This operating system is designed for large screens. Buy a screen first.</div>
-    <div class="mb-price">$199+</div>
-    <div class="mb-sub">Minimum 1024px width required. Please open on a desktop or laptop.</div>
-  </div>
+<div id="mobile-blocker">
+	<div class="mb-icon">📱</div>
+	<div class="mb-title">MO OS</div>
+	<div class="mb-sub">This operating system is designed for large screens. Buy a screen first.</div>
+	<div class="mb-price">$199+</div>
+	<div class="mb-sub">Minimum 1024px width required. Please open on a desktop or laptop.</div>
+</div>
 
-  <!-- FULLSCREEN WARNING -->
-  <div id="fullscreen-warn">
-    <span>&#9888; MO OS works best in fullscreen</span>
-    <span class="fsw-btn" id="fsw-btn">GO FULLSCREEN</span>
-    <span id="fsw-dismiss" style="margin-left:12px;opacity:0.5;cursor:pointer">&times;</span>
-  </div>
+<div id="fullscreen-warn">
+	<span>⚠️ MO OS works best in fullscreen</span>
+	<span class="fsw-btn" id="fsw-btn">GO FULLSCREEN</span>
+	<span id="fsw-dismiss" style="margin-left:12px;opacity:0.5;cursor:pointer">×</span>
+</div>
 
-  <!-- LOCK SCREEN / OPENING SCREEN -->
-  <div id="lock-screen">
-    <div class="lock-bg-overlay"></div>
-    <div class="lock-content">
-      <div class="lock-time" id="lock-clock">00:00</div>
-      <div class="lock-date" id="lock-date">MONDAY, JAN 1</div>
-      <div class="lock-funfact" id="lock-funfact"></div>
-      <div class="lock-enter-hint" id="lock-enter-hint">CLICK TO OPEN</div>
-    </div>
-  </div>
+<div id="lock-screen">
+	<div class="lock-bg-overlay"></div>
+	<div class="lock-content">
+		<div class="lock-time" id="lock-clock">00:00</div>
+		<div class="lock-date" id="lock-date">MONDAY, JAN 1</div>
+		<div class="lock-funfact" id="lock-funfact"></div>
+		<div class="lock-enter-hint" id="lock-enter-hint">CLICK TO OPEN</div>
+	</div>
+</div>
 
-  <!-- BOOT -->
-  <div id="boot-screen">
-    <div id="boot-logo">MO OS</div>
-    <div id="boot-subtitle">DEVELOPER OS</div>
-    <div id="boot-greeting" style="font-size:12px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;opacity:0;transition:opacity 0.5s ease 0.6s">WELCOME BACK</div>
-    <div id="boot-progress"><div id="boot-progress-fill"></div></div>
-    <div id="boot-log">
-      <div class="line" data-delay="400">INITIALIZING KERNEL...</div>
-      <div class="line" data-delay="300">LOADING CORE MODULES...</div>
-      <div class="line" data-delay="350">MOUNTING FILESYSTEM...</div>
-      <div class="line" data-delay="250">LOADING INTERFACE...</div>
-      <div class="line" data-delay="300">CHECKING NETWORK...</div>
-      <div class="line" data-delay="200">PREPARING WORKSPACE...</div>
-      <div class="line" data-delay="150">LOADING WALLPAPERS...</div>
-      <div class="line" data-delay="200">SYSTEM READY</div>
-    </div>
-    <div id="boot-version">MO OS / 01.0</div>
-  </div>
+<div id="boot-screen">
+	<div id="boot-logo">MO OS</div>
+	<div id="boot-subtitle">DEVELOPER OS</div>
+	<div id="boot-greeting" style="font-size:12px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;opacity:0;transition:opacity 0.5s ease 0.6s">WELCOME BACK</div>
+	<div id="boot-progress"><div id="boot-progress-fill"></div></div>
+	<div id="boot-log">
+		<div class="line" data-delay="400">INITIALIZING KERNEL...</div>
+		<div class="line" data-delay="300">LOADING CORE MODULES...</div>
+		<div class="line" data-delay="350">MOUNTING FILESYSTEM...</div>
+		<div class="line" data-delay="250">LOADING INTERFACE...</div>
+		<div class="line" data-delay="300">CHECKING NETWORK...</div>
+		<div class="line" data-delay="200">PREPARING WORKSPACE...</div>
+		<div class="line" data-delay="150">LOADING WALLPAPERS...</div>
+		<div class="line" data-delay="200">SYSTEM READY</div>
+	</div>
+	<div id="boot-version">MO OS / 01.0</div>
+</div>
 
-  <!-- DESKTOP -->
-  <div id="desktop">
-    <div class="wallpaper" id="wp-mo-grid"></div>
-    <div class="wallpaper" id="wp-ocean" style="display:none"></div>
-    <div class="wallpaper" id="wp-dusk" style="display:none"></div>
-    <div class="wallpaper" id="wp-ember" style="display:none"></div>
-    <div class="wallpaper" id="wp-slate" style="display:none"></div>
+<div id="desktop">
+	<div class="wallpaper" id="wp-mo-grid"></div>
+	<div class="wallpaper" id="wp-ocean" style="display:none"></div>
+	<div class="wallpaper" id="wp-dusk" style="display:none"></div>
+	<div class="wallpaper" id="wp-ember" style="display:none"></div>
+	<div class="wallpaper" id="wp-slate" style="display:none"></div>
 
-    <div id="topbar">
-      <div id="topbar-left">MO OS</div>
-      <div id="topbar-center"></div>
-      <div id="topbar-right"><span id="topbar-wifi"><span class="topbar-dot"></span>ONLINE</span><span>78%</span><span id="topbar-clock"></span><span id="topbar-power">&#9211;</span></div>
-    </div>
+	<div id="topbar">
+		<div id="topbar-left">MO OS</div>
+		<div id="topbar-center"></div>
+		<div id="topbar-right"><span id="topbar-wifi"><span class="topbar-dot"></span>ONLINE</span><span>78%</span><span id="topbar-clock"></span><span id="topbar-power">⏻</span></div>
+	</div>
 
-    <div id="power-menu">
-      <div class="power-option" data-power="sleep">&#9789; SLEEP</div>
-      <div class="power-option" data-power="restart">&#8634; RESTART</div>
-      <div class="power-option power-danger" data-power="shutdown">&#9211; SHUTDOWN</div>
-    </div>
+	<div id="power-menu">
+		<div class="power-option" data-power="sleep">☽ SLEEP</div>
+		<div class="power-option" data-power="restart">⟳ RESTART</div>
+		<div class="power-option power-danger" data-power="shutdown">⏻ SHUTDOWN</div>
+	</div>
 
-    <div id="desktop-icons">
-      <div class="desktop-icon" data-app="files"><div class="icon">&#128193;</div><div class="label">Files</div></div>
-      <div class="desktop-icon" data-app="projects"><div class="icon">&#9632;</div><div class="label">Projects</div></div>
-      <div class="desktop-icon" data-app="browser"><div class="icon">&#9679;</div><div class="label">Browser</div></div>
-      <div class="desktop-icon" data-app="terminal"><div class="icon">&#9654;</div><div class="label">Terminal</div></div>
-      <div class="desktop-icon" data-app="notes"><div class="icon">&#9998;</div><div class="label">Notes</div></div>
-      <div class="desktop-icon" data-app="calculator"><div class="icon">=</div><div class="label">Calculator</div></div>
-      <div class="desktop-icon" data-app="calendar"><div class="icon">&#9670;</div><div class="label">Calendar</div></div>
-      <div class="desktop-icon" data-app="editor"><div class="icon">&#9998;</div><div class="label">Editor</div></div>
-      <div class="desktop-icon" data-app="music"><div class="icon">&#9835;</div><div class="label">Music</div></div>
-      <div class="desktop-icon" data-app="maps"><div class="icon">&#127758;</div><div class="label">Maps</div></div>
-      <div class="desktop-icon" data-app="settings"><div class="icon">&#9881;</div><div class="label">Settings</div></div>
-    </div>
+	<div id="desktop-icons">
+		<div class="desktop-icon" data-app="files"><div class="icon">📁</div><div class="label">Files</div></div>
+		<div class="desktop-icon" data-app="projects"><div class="icon">⬛</div><div class="label">Projects</div></div>
+		<div class="desktop-icon" data-app="browser"><div class="icon">●</div><div class="label">Browser</div></div>
+		<div class="desktop-icon" data-app="terminal"><div class="icon">▶</div><div class="label">Terminal</div></div>
+		<div class="desktop-icon" data-app="notes"><div class="icon">✎</div><div class="label">Notes</div></div>
+		<div class="desktop-icon" data-app="calculator"><div class="icon">=</div><div class="label">Calculator</div></div>
+		<div class="desktop-icon" data-app="calendar"><div class="icon">◆</div><div class="label">Calendar</div></div>
+		<div class="desktop-icon" data-app="editor"><div class="icon">✎</div><div class="label">Editor</div></div>
+		<div class="desktop-icon" data-app="music"><div class="icon">♫</div><div class="label">Music</div></div>
+		<div class="desktop-icon" data-app="maps"><div class="icon">🌐</div><div class="label">Maps</div></div>
+		<div class="desktop-icon" data-app="settings"><div class="icon">⚙</div><div class="label">Settings</div></div>
+	</div>
 
-    <div id="dock">
-      <div class="dock-item" data-app="files"><div class="icon">&#128193;</div><div class="label">Files</div></div>
-      <div class="dock-item" data-app="browser"><div class="icon">&#9679;</div><div class="label">Browse</div></div>
-      <div class="dock-item" data-app="terminal"><div class="icon">&#9654;</div><div class="label">Term</div></div>
-      <div class="dock-item" data-app="notes"><div class="icon">&#9998;</div><div class="label">Notes</div></div>
-      <div class="dock-item" data-app="projects"><div class="icon">&#9632;</div><div class="label">Projects</div></div>
-      <div class="dock-item" data-app="calculator"><div class="icon">=</div><div class="label">Calc</div></div>
-      <div class="dock-item" data-app="calendar"><div class="icon">&#9670;</div><div class="label">Cal</div></div>
-      <div class="dock-item" data-app="editor"><div class="icon">&#9998;</div><div class="label">Code</div></div>
-      <div class="dock-item" data-app="music"><div class="icon">&#9835;</div><div class="label">Music</div></div>
-      <div class="dock-item" data-app="maps"><div class="icon">&#127758;</div><div class="label">Maps</div></div>
-      <div class="dock-item" data-app="settings"><div class="icon">&#9881;</div><div class="label">Config</div></div>
-    </div>
-  </div>
+	<div id="dock">
+		<div class="dock-item" data-app="files"><div class="icon">📁</div><div class="label">Files</div></div>
+		<div class="dock-item" data-app="browser"><div class="icon">●</div><div class="label">Browse</div></div>
+		<div class="dock-item" data-app="terminal"><div class="icon">▶</div><div class="label">Term</div></div>
+		<div class="dock-item" data-app="notes"><div class="icon">✎</div><div class="label">Notes</div></div>
+		<div class="dock-item" data-app="projects"><div class="icon">⬛</div><div class="label">Projects</div></div>
+		<div class="dock-item" data-app="calculator"><div class="icon">=</div><div class="label">Calc</div></div>
+		<div class="dock-item" data-app="calendar"><div class="icon">◆</div><div class="label">Cal</div></div>
+		<div class="dock-item" data-app="editor"><div class="icon">✎</div><div class="label">Code</div></div>
+		<div class="dock-item" data-app="music"><div class="icon">♫</div><div class="label">Music</div></div>
+		<div class="dock-item" data-app="maps"><div class="icon">🌐</div><div class="label">Maps</div></div>
+		<div class="dock-item" data-app="settings"><div class="icon">⚙</div><div class="label">Config</div></div>
+	</div>
+</div>
 
-  <div id="notification"><div class="n-title">SYSTEM</div><div class="n-msg"></div></div>
+<div id="notification"><div class="n-title">SYSTEM</div><div class="n-msg"></div></div>
 
-  <div id="mo-modal-overlay">
-    <div id="mo-modal">
-      <div id="mo-modal-title"></div>
-      <div id="mo-modal-body"></div>
-      <div id="mo-modal-actions">
-        <button id="mo-modal-cancel" class="mo-btn">CANCEL</button>
-        <button id="mo-modal-confirm" class="mo-btn mo-btn-primary">OK</button>
-      </div>
-    </div>
-  </div>
+<div id="mo-modal-overlay">
+	<div id="mo-modal">
+		<div id="mo-modal-title"></div>
+		<div id="mo-modal-body"></div>
+		<div id="mo-modal-actions">
+			<button id="mo-modal-cancel" class="mo-btn">CANCEL</button>
+			<button id="mo-modal-confirm" class="mo-btn mo-btn-primary">OK</button>
+		</div>
+	</div>
+</div>
 
-  <div id="shutdown-screen">
-    <div id="shutdown-text">SHUTTING DOWN...</div>
-    <div id="shutdown-sub">It is now safe to close this window.</div>
-  </div>
+<div id="shutdown-screen">
+	<div id="shutdown-text">SHUTTING DOWN...</div>
+	<div id="shutdown-sub">It is now safe to close this window.</div>
+</div>
 
-  <div id="sleep-screen">
-    <div class="lock-time" id="sleep-clock">00:00</div>
-    <div class="lock-date" id="sleep-date">MONDAY, JAN 1</div>
-    <div class="sleep-hint">Click or press any key to wake</div>
-  </div>
+<div id="sleep-screen">
+	<div class="lock-time" id="sleep-clock">00:00</div>
+	<div class="lock-date" id="sleep-date">MONDAY, JAN 1</div>
+	<div class="sleep-hint">Click or press any key to wake</div>
+</div>
 
-  <div id="cmd-palette-overlay">
-    <div id="cmd-palette">
-      <input id="cmd-input" type="text" placeholder="Search everything..." autocomplete="off">
-      <div id="cmd-results"></div>
-    </div>
-  </div>
+<div id="cmd-palette-overlay">
+	<div id="cmd-palette">
+		<input id="cmd-input" type="text" placeholder="Search everything..." autocomplete="off">
+		<div id="cmd-results"></div>
+	</div>
+</div>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
