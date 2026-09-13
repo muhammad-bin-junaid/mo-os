@@ -1,4 +1,4 @@
-/* ── STORAGE ── */
+    /* ── STORAGE ── */
     function getStore(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
     function setStore(k,v){localStorage.setItem(k,JSON.stringify(v))}
     function ensureDefaults(){
@@ -19,7 +19,7 @@
     }
     ensureDefaults();
 
-    /* ── CLOCK ── */
+    /* ── CLOCK (runs immediately) ── */
     function updateClock(){
       var now=new Date(),days=['SUN','MON','TUE','WED','THU','FRI','SAT'],months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
       var d=days[now.getDay()]+' '+String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()];
@@ -29,26 +29,35 @@
       var wifiOn=getStore('mo-wifi',true);
       var wifiEl=document.getElementById('topbar-wifi');
       if(wifiEl){wifiEl.innerHTML=(wifiOn?'<span class="topbar-dot"></span>ONLINE':'<span class="topbar-dot" style="background:#ff5f57"></span>OFFLINE');}
+      var lockClock=document.getElementById('lock-clock');
+      var lockDate=document.getElementById('lock-date');
+      if(lockClock){
+        var h=String(now.getHours()).padStart(2,'0');
+        var m=String(now.getMinutes()).padStart(2,'0');
+        lockClock.textContent=h+':'+m;
+        var fullDays=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+        var fullMonths=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        lockDate.textContent=fullDays[now.getDay()]+', '+fullMonths[now.getMonth()]+' '+now.getDate();
+      }
     }
-    updateClock(); setInterval(updateClock,10000);
+    updateClock(); setInterval(updateClock,1000);
 
     /* ── NOTIFICATIONS ── */
     var notifTimer=null;
     function showNotification(msg){var el=document.getElementById('notification');el.querySelector('.n-msg').textContent=msg;el.classList.add('show');clearTimeout(notifTimer);notifTimer=setTimeout(function(){el.classList.remove('show')},2500);}
 
     /* ── BOOT ── */
+    function checkFullscreen(){
+      var fw=document.getElementById('fullscreen-warn');
+      if(!fw)return;
+      if(!document.fullscreenElement&&!document.webkitFullscreenElement){fw.style.display='flex';}
+      else{fw.style.display='none';}
+    }
     (function(){
-      var logo=document.getElementById('boot-logo'),subtitle=document.getElementById('boot-subtitle'),greeting=document.getElementById('boot-greeting'),progress=document.getElementById('boot-progress'),progressFill=document.getElementById('boot-progress-fill'),lines=document.querySelectorAll('#boot-log .line'),version=document.getElementById('boot-version'),bootScreen=document.getElementById('boot-screen'),desktop=document.getElementById('desktop'),dock=document.getElementById('dock');
-      // mobile check
+      var logo=document.getElementById('boot-logo'),subtitle=document.getElementById('boot-subtitle'),greeting=document.getElementById('boot-greeting'),progress=document.getElementById('boot-progress'),progressFill=document.getElementById('boot-progress-fill'),lines=document.querySelectorAll('#boot-log .line'),version=document.getElementById('boot-version'),bootScreen=document.getElementById('boot-screen');
       if(window.innerWidth<1024||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){
         document.getElementById('mobile-blocker').style.display='flex';
         bootScreen.remove();return;
-      }
-      // fullscreen check
-      function checkFullscreen(){
-        var fw=document.getElementById('fullscreen-warn');
-        if(!document.fullscreenElement&&!document.webkitFullscreenElement){fw.style.display='flex';}
-        else{fw.style.display='none';}
       }
       document.getElementById('fsw-btn').addEventListener('click',function(){
         var el=document.documentElement;
@@ -58,7 +67,6 @@
       document.getElementById('fsw-dismiss').addEventListener('click',function(){document.getElementById('fullscreen-warn').style.display='none';});
       document.addEventListener('fullscreenchange',checkFullscreen);
       document.addEventListener('webkitfullscreenchange',checkFullscreen);
-      // user name
       var userName=getStore('mo-user-name','Developer');
       greeting.textContent='WELCOME BACK, '+userName.toUpperCase();
       setTimeout(function(){greeting.style.opacity='1'},800);
@@ -78,14 +86,14 @@
       setTimeout(function(){lines[lines.length-1].classList.add('done')},td);
       setTimeout(function(){progressFill.style.width='100%'},td);
       setTimeout(function(){version.classList.add('visible')},td+300);
-      // after boot, show lock screen
       setTimeout(function(){
-        bootScreen.classList.add('fade-out');
-        bootScreen.remove();
-        initLockScreen();
+        bootScreen.style.transition='opacity 0.8s ease';
+        bootScreen.style.opacity='0';
+        setTimeout(function(){bootScreen.remove();checkFullscreen();},800);
       },td+1600);
       checkFullscreen();
     })();
+    initLockScreen();
 
     /* ── CUSTOM MODAL (replaces browser prompt) ── */
     function moPrompt(title, fields){
@@ -121,99 +129,68 @@
       });
     }
 
-    /* ── LOCK SCREEN ── */
+    /* ── LOCK SCREEN / OPENING SCREEN ── */
+    var lockKeyHandler=null;
     function initLockScreen(){
       var lockScreen=document.getElementById('lock-screen');
-      var lockClock=document.getElementById('lock-clock');
-      var lockDate=document.getElementById('lock-date');
-      var lockName=document.getElementById('lock-name');
-      var lockPwRow=document.getElementById('lock-pw-row');
-      var lockPwInput=document.getElementById('lock-pw-input');
-      var lockPwBtn=document.getElementById('lock-pw-btn');
-      var lockHint=document.getElementById('lock-hint');
-      var lockError=document.getElementById('lock-error');
-      var lockSignin=document.getElementById('lock-signin');
-      var lockForgot=document.getElementById('lock-forgot');
-      var userPw=getStore('mo-user-pw',null);
-      var userName=getStore('mo-user-name','Developer');
-      lockName.textContent=userName;
-      if(!userPw){
-        lockPwRow.style.display='none';
-        lockHint.textContent='No password set. Click below to get started.';
-        lockForgot.style.display='none';
-      }else{
-        lockHint.textContent='';
-        lockForgot.style.display='';
+      if(!lockScreen)return;
+      var lockFunfact=document.getElementById('lock-funfact');
+      var funFacts=[
+        'The first computer bug was an actual moth found in a Harvard Mark II in 1947.',
+        'The first programmer was Ada Lovelace, who wrote algorithms for Charles Babbage\'s Analytical Engine in the 1840s.',
+        'JavaScript was created in just 10 days by Brendan Eich in 1995.',
+        'The average programmer writes about 50 lines of production-quality code per day.',
+        'There are over 700 programming languages in the world.',
+        'The first computer mouse was made of wood.',
+        'HTML is not a programming language — it\'s a markup language.',
+        'The first website ever made is still online at info.cern.ch.',
+        'The term "debugging" was popularized by Grace Hopper after finding a moth in a computer.',
+        'Python is named after Monty Python, not the snake.',
+        'A group of flamingos is called a "flamboyance."',
+        'Honey never spoils. Archaeologists found 3,000-year-old honey in Egyptian tombs that was still edible.',
+        'Octopuses have three hearts and blue blood.',
+        'Bananas are berries, but strawberries are not.',
+        'The shortest war in history lasted 38 to 45 minutes (between Britain and Zanzibar).',
+        'A day on Venus is longer than a year on Venus.',
+        'Your brain uses about 20% of your total energy.',
+        'The moon is slowly drifting away from Earth at about 3.8 cm per year.',
+        'Cows have best friends and get stressed when separated.',
+        'The inventor of the Pringles can is buried in one.',
+        'M x 42 = a well-known cultural reference — the answer to life, the universe, and everything.',
+        'Walt Disney was afraid of mice.',
+        'The dot over the letters i and j is called a tittle.',
+        'A jiffy is an actual unit of time: 1/100th of a second.'
+      ];
+      var usedFacts=[];
+      function pickFact(){
+        if(usedFacts.length>=funFacts.length)usedFacts=[];
+        var idx;
+        do{idx=Math.floor(Math.random()*funFacts.length);}while(usedFacts.indexOf(idx)!==-1);
+        usedFacts.push(idx);
+        return funFacts[idx];
       }
-      function updateLockClock(){
-        var now=new Date();
-        lockClock.textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-        var days=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-        var months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-        lockDate.textContent=days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
-      }
-      updateLockClock();setInterval(updateLockClock,10000);
+      lockFunfact.textContent=pickFact();
+      setInterval(function(){lockFunfact.style.opacity='0';setTimeout(function(){lockFunfact.textContent=pickFact();lockFunfact.style.opacity='1';},500);},8000);
       function doUnlock(){
+        lockScreen.classList.remove('visible');
         lockScreen.classList.add('hidden');
-        setTimeout(function(){lockScreen.remove();showDesktop();},600);
+        setTimeout(function(){lockScreen.remove();showDesktop();},800);
       }
       function showDesktop(){
-        var d=document.getElementById('desktop');d.classList.add('visible');
-        var dk=document.getElementById('dock');dk.classList.add('visible');
+        document.getElementById('desktop').classList.add('visible');
+        document.getElementById('dock').classList.add('visible');
         checkFullscreen();
       }
-      function showError(msg){lockError.textContent=msg;setTimeout(function(){lockError.textContent='';},2500);}
-      lockPwBtn.addEventListener('click',function(){
-        var pw=lockPwInput.value;
-        if(pw===userPw){doUnlock();}
-        else{showError('WRONG PASSWORD');lockPwInput.value='';}
-      });
-      lockPwInput.addEventListener('keydown',function(e){if(e.key==='Enter')lockPwBtn.click();});
-      lockSignin.addEventListener('click',async function(){
-        var result=await moPrompt('NEW USER SIGN IN',[
-          {label:'YOUR NAME',type:'text',placeholder:'Enter your name...'},
-          {label:'SET PASSWORD (leave blank for no password)',type:'password',placeholder:'Enter password...'}
-        ]);
-        if(!result)return;
-        var name=result[0].trim()||'Developer';
-        var pw=result[1]||'';
-        setStore('mo-user-name',name);
-        setStore('mo-user-pw',pw||null);
-        lockName.textContent=name;
-        if(pw){
-          lockPwRow.style.display='';
-          lockHint.textContent='Password set. Enter it to unlock.';
-          lockForgot.style.display='';
-        }else{
-          doUnlock();
+      lockScreen.onclick=function(){doUnlock();};
+      if(lockKeyHandler)document.removeEventListener('keydown',lockKeyHandler);
+      lockKeyHandler=function(e){
+        if(e.key==='Enter'||e.key===' '||e.key==='Escape'){
+          if(lockScreen&&lockScreen.parentNode){
+            doUnlock();
+          }
         }
-      });
-      lockForgot.addEventListener('click',async function(){
-        var result=await moPrompt('RESET PASSWORD',[
-          {label:'VERIFY YOUR NAME',type:'text',placeholder:'Enter your name...'},
-          {label:'NEW PASSWORD (leave blank to remove)',type:'password',placeholder:'Enter new password...'}
-        ]);
-        if(!result)return;
-        var name=result[0].trim();
-        var newPw=result[1]||'';
-        var storedName=getStore('mo-user-name','Developer');
-        if(name.toLowerCase()!==storedName.toLowerCase()){
-          showError('NAME DOES NOT MATCH');
-          return;
-        }
-        setStore('mo-user-pw',newPw||null);
-        userPw=newPw||null;
-        if(newPw){
-          lockPwRow.style.display='';
-          lockHint.textContent='Password reset. Enter it to unlock.';
-          lockForgot.style.display='';
-        }else{
-          lockPwRow.style.display='none';
-          lockHint.textContent='Password removed. Click sign in below.';
-          lockForgot.style.display='none';
-        }
-        showNotification('Password has been reset.');
-      });
+      };
+      document.addEventListener('keydown',lockKeyHandler);
     }
 
     /* ── WINDOW MANAGEMENT ── */
@@ -1629,7 +1606,7 @@
         var bootDiv=document.createElement('div');
         bootDiv.id='boot-screen';
         bootDiv.innerHTML='<div id="boot-logo">MO OS</div><div id="boot-subtitle">DEVELOPER OS</div><div id="boot-greeting" style="font-size:12px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;opacity:0;transition:opacity 0.5s ease 0.6s">WELCOME BACK</div><div id="boot-progress"><div id="boot-progress-fill"></div></div><div id="boot-log"><div class="line" data-delay="400">INITIALIZING KERNEL...</div><div class="line" data-delay="300">LOADING CORE MODULES...</div><div class="line" data-delay="350">MOUNTING FILESYSTEM...</div><div class="line" data-delay="250">LOADING INTERFACE...</div><div class="line" data-delay="300">CHECKING NETWORK...</div><div class="line" data-delay="200">PREPARING WORKSPACE...</div><div class="line" data-delay="150">LOADING WALLPAPERS...</div><div class="line" data-delay="200">SYSTEM READY</div></div><div id="boot-version">MO OS / 01.0</div>';
-        bootDiv.style.cssText='position:fixed;inset:0;background:#0e0e0e;z-index:100000;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 0.8s ease;';
+        bootDiv.style.cssText='position:fixed;inset:0;background:#0e0e0e;z-index:200000;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 0.8s ease;';
         document.body.appendChild(bootDiv);
 
         var logo=document.getElementById('boot-logo');
@@ -1664,30 +1641,51 @@
         setTimeout(function(){
           bootDiv.classList.add('fade-out');
           bootDiv.style.opacity='0';
-          setTimeout(function(){bootDiv.remove();initLockScreen();},800);
+          setTimeout(function(){
+            bootDiv.remove();
+            var ls=document.createElement('div');
+            ls.id='lock-screen';
+            ls.innerHTML='<div class="lock-bg-overlay"></div><div class="lock-content"><div class="lock-time" id="lock-clock">00:00</div><div class="lock-date" id="lock-date">MONDAY, JAN 1</div><div class="lock-funfact" id="lock-funfact"></div><div class="lock-enter-hint" id="lock-enter-hint">CLICK TO OPEN</div></div>';
+            document.body.appendChild(ls);
+            initLockScreen();
+            checkFullscreen();
+          },800);
         },td+1600);
       }
 
       function doSleep(){
         powerMenu.classList.remove('open');
-        var now=new Date();
-        var days=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-        var months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-        document.getElementById('sleep-clock').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-        document.getElementById('sleep-date').textContent=days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
-        sleepScreen.classList.add('show');
-        setTimeout(function(){sleepScreen.style.opacity='1';},50);
-        function wake(){
-          sleepScreen.removeEventListener('click',wake);
-          document.removeEventListener('keydown',wakeKey);
-          sleepScreen.style.opacity='0';
-          setTimeout(function(){sleepScreen.classList.remove('show');},800);
-        }
-        function wakeKey(){wake();}
+        closeAllWindows();
+        var desktop=document.getElementById('desktop');
+        var dock=document.getElementById('dock');
+        var topbar=document.getElementById('topbar');
+        desktop.style.transition='opacity 0.8s ease';
+        dock.style.transition='opacity 0.8s ease';
+        topbar.style.transition='opacity 0.8s ease';
+        desktop.style.opacity='0';
+        dock.style.opacity='0';
+        topbar.style.opacity='0';
         setTimeout(function(){
-          sleepScreen.addEventListener('click',wake);
-          document.addEventListener('keydown',wakeKey);
-        },500);
+          desktop.classList.remove('visible');
+          dock.classList.remove('visible');
+          desktop.style.opacity='';
+          dock.style.opacity='';
+          topbar.style.opacity='';
+          desktop.style.transition='';
+          dock.style.transition='';
+          topbar.style.transition='';
+          document.querySelectorAll('.wallpaper').forEach(function(w){w.style.display='none';});
+          var wp=localStorage.getItem('mo-wallpaper')||'wp-mo-grid';
+          document.getElementById(wp).style.display='';
+          var ls=document.getElementById('lock-screen');
+          if(!ls){
+            ls=document.createElement('div');
+            ls.id='lock-screen';
+            ls.innerHTML='<div class="lock-bg-overlay"></div><div class="lock-content"><div class="lock-time" id="lock-clock">00:00</div><div class="lock-date" id="lock-date">MONDAY, JAN 1</div><div class="lock-funfact" id="lock-funfact"></div><div class="lock-enter-hint" id="lock-enter-hint">CLICK ANYWHERE TO OPEN</div></div>';
+            document.body.appendChild(ls);
+          }
+          initLockScreen();
+        },800);
       }
 
       powerMenu.addEventListener('click',function(e){

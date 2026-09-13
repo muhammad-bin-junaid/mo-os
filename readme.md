@@ -2,19 +2,20 @@
 
 A calm, editorial operating system for software developers.
 
-## About
+![MO OS Preview](image%20(22).png)
 
-MO OS was created from scratch using HTML, CSS, and a bit of JavaScript. AI was used only to assist with some of the JavaScript development. The concept, design, features, and overall direction were created and put together by me.
+**Live:** [mo-os-alpha.vercel.app](https://mo-os-alpha.vercel.app/)
+**GitHub:** [github.com/muhammad-bin-junaid/mo-os](https://github.com/muhammad-bin-junaid/mo-os)
 
-## Development Time: ~5.5 hours
+## Development Time: ~7 hours
 
-- **1.5 hr** — Planning & compiling
-- **3 hr** — Coding & building
 - **1 hr** — Testing, fixing & polishing
+- **4.5 hr** — Coding & building
+- **1.5 hr** — Planning & compiling
 
 ## Features
 
-- Boot sequence with progress bar and glow animation
+- Opening screen with live clock, date, and fun facts
 - Desktop with wallpaper system (5 wallpapers)
 - Window manager (drag, minimize, maximize, close)
 - Files & Folders (create, open, browse)
